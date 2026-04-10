@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import chardet
+
 
 st.set_page_config(page_title="Analisis de Visitas Marzo", layout="wide")
 
@@ -11,7 +13,23 @@ st.markdown("### Análisis de ejecución en campo")
 file = st.file_uploader("Sube tu CSV", type=["csv"])
 
 if file:
-    df = pd.read_csv(file, encoding='latin-1')
+ def read_csv_smart(file):
+    # Detectar encoding automáticamente
+    rawdata = file.read(100000)
+    result = chardet.detect(rawdata)
+    file.seek(0)
+
+    encoding = result['encoding']
+
+    try:
+        df = pd.read_csv(file, encoding=encoding, sep=None, engine='python')
+    except:
+        # fallback seguro
+        df = pd.read_csv(file, encoding='latin-1', sep=None, engine='python')
+
+    return df
+
+df = read_csv_smart(file)
     df.columns = df.columns.str.strip()
 
     # 🧹 Limpieza
